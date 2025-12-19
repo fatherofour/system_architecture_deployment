@@ -1,0 +1,19 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Docker Image
+        run: docker build -t myapp:${{ github.sha }} .
+      - name: Run SAST Scan
+        run: semgrep --config=p/owasp-top-10 .
+      - name: Run DAST Scan
+        run: zap-cli quick-scan --self-contained --start-options "-config api.disablekey=true"
+      - name: Push Image to Registry
+        run: docker push myregistry/myapp:${{ github.sha }}
